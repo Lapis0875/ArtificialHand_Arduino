@@ -1,9 +1,12 @@
 #include<Servo.h> 
 
 Servo thumbMotor, indexMotor, middleMotor, ringMotor, littleMotor;
-int thumbPin=7, indexPin=8, middlePin=9, ringPin=10, littlePin=11;
+int thumbPin=10, indexPin=11, middlePin=9, ringPin=8, littlePin=7;
 Servo motor_list[5] = {thumbMotor, indexMotor, middleMotor, ringMotor, littleMotor};
+byte motor_angle_list[5] = {70, 0, 50, 40, 70};
 int motor_pin_list[5]={thumbPin, indexPin, middlePin, ringPin, littlePin};
+
+bool motionFlag = false;
 
 int btnOnePin=2, btnTwoPin=3;
 int BTN_PRESSED=0, BTN_UNPRESSED=1;
@@ -16,6 +19,10 @@ int pos = 0;
 
 // the setup function runs once when you press reset or power the board
 void setup() {
+  /*
+   5개 서보 가로 폭 100.7mm
+   볼트 홈 아래 ~ 서보모터 아래 24mm
+   */
   for(int i=0;i<5;i++){
     motor_list[i].attach(motor_pin_list[i]);
     motor_list[i].write(0);
@@ -34,124 +41,108 @@ void setup() {
 
 // the loop function runs over and over again until power down or reset
 void loop() {
+  delay(1000);
   byte btnAvailable[] = {digitalRead(btnOnePin), digitalRead(btnTwoPin)};
-  if(btnAvailable[0] == BTN_PRESSED && btnAvailable[1] == BTN_UNPRESSED){
+  if(btnAvailable[0] == BTN_PRESSED && btnAvailable[1] == BTN_UNPRESSED&&!motionFlag){
     Serial.println("[Hand Mode] FIST");
+    motionFlag = true;
     moveHand_fist();
   }
-  else if(btnAvailable[0] == BTN_UNPRESSED && btnAvailable[1] == BTN_PRESSED){
+  else if(btnAvailable[0] == BTN_UNPRESSED && btnAvailable[1] == BTN_PRESSED&&!motionFlag){
     Serial.println("[Hand Mode] COUNT");
+    motionFlag = true;
     moveHand_count();
   }
-  else if (btnAvailable[0] == BTN_PRESSED && btnAvailable[1] == BTN_PRESSED){
-    Serial.println("[Hand Mode] FUCK_U");
-    moveHand_count();
+  else if (btnAvailable[0] == BTN_PRESSED && btnAvailable[1] == BTN_PRESSED&&!motionFlag){
+    Serial.println("[Hand Mode] MODE 3");
+    motionFlag = true;
+    
   }
   else if(btnAvailable[0] == BTN_UNPRESSED && btnAvailable[1] == BTN_UNPRESSED){
     Serial.println("[Hand Mode] UNPRESSED");
+    motionFlag = false;
   }
 	Serial.println("Motor Loop Begins");
-  delay(1000);
-  Serial.println("Moving into next servo");
-  delay(1000);
-  servo_angle_debugger(thumbMotor, 0);
-  Serial.println("Moving into next servo");
-  delay(1000);
-  servo_angle_debugger(indexMotor, 1);
-  Serial.println("Moving into next servo");
-  delay(1000);
-  servo_angle_debugger(middleMotor, 2);
-  Serial.println("Moving into next servo");
-  delay(1000);
-  servo_angle_debugger(ringMotor, 3);
-  Serial.println("Moving into next servo");
-  delay(1000);
-  servo_angle_debugger(littleMotor, 4);
 
-  /*
-  Serial.println("Motor Increasing Loop Begins");
-  for(int i=0;i<5;i++){
-    Serial.print(i);
-    Serial.println(" motor begins.");
-    moveMotor(motor_list[i], 180, 'i');
-    delay(100);
+  for(double deg=0;deg<70;deg+=0.2){
+    Serial.println(deg);
+    //thumbMotor.write(deg);
+    indexMotor.write(deg);
+    middleMotor.write(deg);
+    ringMotor.write(deg);
+    littleMotor.write(deg);
   }
-  Serial.println("Motor Increasing Loop Ends");
-  
-  Serial.println("Motor Decreasing Loop Begins");
-  for(int i=0;i<5;i++){
-    Serial.print(i);
-    Serial.println(" motor begins.");
-    moveMotor(motor_list[i], 0, 'd');
-    delay(100);
+  for(double deg=70;deg>=0;deg-=0.2){
+    Serial.println(deg);
+    //thumbMotor.write(deg);
+    indexMotor.write(deg);
+    middleMotor.write(deg);
+    ringMotor.write(deg);
+    littleMotor.write(deg);
   }
-  Serial.println("Motor Decreasing Loop Ends");
-  */
-  /*
-  Serial.println("Motor Increasing Loop Begins");
-  for (pos = 0; pos < 180; pos += 1){
-      thumbMotor.write(pos);
-      indexMotor.write(pos);
-      middleMotor.write(pos);
-      ringMotor.write(pos);
-      littleMotor.write(pos);
-      delay(15);
-  }
-  Serial.println("Motor Increasing Loop Ends");
-  
-  Serial.println("Motor Decreasing Loop Begins");
-  for (pos = 180; pos >= 1; pos -= 1){
-      thumbMotor.write(pos);
-      indexMotor.write(pos);
-      middleMotor.write(pos);
-      ringMotor.write(pos);
-      littleMotor.write(pos);
-      delay(15);
-  }
-  Serial.println("Motor Decreasing Loop Ends");
-  */
-	//Serial.println("Motor Loop Ends");
-}
-
-void moveMotor(Servo motor,int pos,char mode){
-  /*
-   moveMotor function is a function to move Servo motor at position given as parameter.
-   motor : type<Servo>, a servo which you want to control.
-   pos : type<int>, target position which you want to move your servo into.
-   mode : type<char>, mode which you want to control your motor. 'i' for increase, 'd' for decrease.
-  */
-  switch(mode){
-    case 'i':
-      for(int degree=0;degree<pos;degree++){
-        motor.write(degree);
-        delay(15);
-      }
-      break;
-    case 'd':
-      for(int degree=180;degree>=pos;degree--){
-        motor.write(degree);
-        delay(15);
-      }
-      break;
-  }
+ 
+	Serial.println("Motor Loop Ends");
 }
 
 void moveHand_fist(){
-  for(int i=0;i<5;i++){
-    
+  Serial.println("Motion : <Fist> has started.");
+  for(float deg=0;deg<180;deg+=0.2f){
+    if(motor_angle_list[0]<=deg){
+      motor_list[0].write(deg);
+    }
+    if(motor_angle_list[1]<=deg){
+      motor_list[1].write(deg);
+    }
+    if(motor_angle_list[2]<=deg){
+      motor_list[2].write(deg);
+    }
+    if(motor_angle_list[3]<=deg){
+      motor_list[3].write(deg);
+    }
+    if(motor_angle_list[4]<=deg){
+      motor_list[4].write(deg);
+    }
   }
+  for(float deg=0;deg<180;deg+=0.2f){
+    if(motor_angle_list[0]<=deg){
+      motor_list[0].write(deg);
+    }
+    if(motor_angle_list[1]<=deg){
+      motor_list[1].write(deg);
+    }
+    if(motor_angle_list[2]<=deg){
+      motor_list[2].write(deg);
+    }
+    if(motor_angle_list[3]<=deg){
+      motor_list[3].write(deg);
+    }
+    if(motor_angle_list[4]<=deg){
+      motor_list[4].write(deg);
+    }
+  }
+  Serial.println("Motion : <Fist> has ended.");
+  motionFlag==false;
 }
 
 void moveHand_count(){
+ Serial.println("Motion : <Counting Numbers> has started.");
   for(int i=0;i<5;i++){
-    
+    for(float deg=0;deg<motor_angle_list[i];deg+=0.2f){
+      motor_list[i].write(deg);
+    }
   }
+  for(int i=0;i<5;i++){
+    for(float deg=motor_angle_list[4-i];deg>0;deg-=0.2f){
+      motor_list[i].write(deg);
+    }
+  }
+ Serial.println("Motion : <Counting Numbers> has ended.");
+  motionFlag==false;
 }
 
-void servo_angle_debugger(Servo motor, int motor_num){
-  for(int deg = 0; deg <180; deg+=3){
-    Serial.print("Current ");
-    Serial.print(motor_num);
+void servo_angle_debugger(Servo motor, int num){
+  for(int deg = 0; deg <180; deg+=num){
+    Serial.print("Starting Motor Test");
     Serial.print(" servo degree : ");
     Serial.println(deg);
 
@@ -162,18 +153,16 @@ void servo_angle_debugger(Servo motor, int motor_num){
     char cmd = Serial.read();
     if(cmd == 'y'){
       Serial.print("Servor Motor [");
-      Serial.print(motor_num);
       Serial.print("] debugging ended. Final result : ");
       Serial.println(deg);
       return;
     }
-    else if(cmd == 'n'){
+    else{
       continue;
     }
     delay(1000);
   }
   Serial.print("Servor Motor [");
-  Serial.print(motor_num);
   Serial.print("] debugging ended. Final result : ");
   Serial.println(180); 
 }
